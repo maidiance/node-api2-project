@@ -64,3 +64,18 @@ router.put('/:id', async(req, res) => {
         res.status(500).json({message: 'The post information could not be modified'});
     }
 });
+
+router.delete('/:id', async(req, res) => {
+    const { id } = req.params;
+    post.remove(id)
+        .then(post => {
+            if(post == null) {
+                res.status(404).json({message: 'The post with the specified ID does not exist'});
+            }
+        })
+        .catch(() => {
+            res.status(500).json({message: 'The post could not be removed'});
+        })
+});
+
+module.exports = router;
