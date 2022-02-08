@@ -38,7 +38,7 @@ router.post('/', (req, res) => {
             .then(post => {
                 res.status(201).json({
                     id: post.id,
-                    ...body,
+                    ...body
                 });
             })
             .catch(() => {
@@ -59,7 +59,7 @@ router.put('/:id', (req, res) => {
             } else {
                 res.status(200).json({
                     id: post.id,
-                    ...body,
+                    ...body
                 });
             }
         })
@@ -70,12 +70,16 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
+    const body = req.body;
     post.remove(id)
         .then(post => {
             if(post == null) {
                 res.status(404).json({message: 'The post with the specified ID does not exist'});
             } else {
-                res.status(200).json(post);
+                res.status(200).json({
+                    id: post.id,
+                    ...body
+                });
             }
         })
         .catch(() => {
