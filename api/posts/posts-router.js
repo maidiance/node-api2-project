@@ -16,7 +16,6 @@ router.get('/', (req, res) => {
 
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    const body = req.body;
     post.findById(id)
         .then(post => {
             if(post == null) {
@@ -24,7 +23,7 @@ router.get('/:id', (req, res) => {
             } else {
                 res.json({
                     id: post.id,
-                    ...body
+                    ...post
                 });
             }
         })
@@ -34,7 +33,7 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-    const body = req.body;
+    const { body } = req;
     if(!body.title || !body.contents){
         res.status(400).json({message: 'Please provide title and contents for the post'});
     } else {
@@ -42,7 +41,8 @@ router.post('/', (req, res) => {
             .then(post => {
                 res.status(201).json({
                     id: post.id,
-                    ...body
+                    title: body.title,
+                    contents: body.contents
                 });
             })
             .catch(() => {
@@ -53,17 +53,24 @@ router.post('/', (req, res) => {
 
 router.put('/:id', (req, res) => {
     const { id } = req.params;
-    const body = req.body;
+    const { body } = req;
+    if(!body.title || !body.contents){
+        res.status(400).json({message: 'Please provide title and contents for the post'});
+        return;
+    }
     post.update(id, body)
         .then(post => {
-            if(post == null) {
+            if(post !== 1) {
                 res.status(404).json({message: 'The post with the specified ID does not exist'});
-            } else if (!post.title || !post.contents) {
-                res.status(400).json({message: 'Please provide title and contents for the post'});
+            } else if (!body.title || !body.contents) {
+                res.status(400).json({
+                    message: 'Please provide title and contents for the post',
+                });
             } else {
                 res.status(200).json({
-                    id: id,
-                    ...body
+                    id: parseInt(id),
+                    title: body.title,
+                    contents: body.contents
                 });
             }
         })
@@ -74,15 +81,24 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
-    const body = req.body;
+    let toDelete = {};
+    post.findById(id)
+        .then(post => {
+            toDelete = post;
+        })
+        .catch(() => {
+            res.status(404).json({message: 'The post with the specified ID does not exist'});
+            return;
+        })
     post.remove(id)
         .then(post => {
-            if(post == null) {
+            if(post === 0) {
                 res.status(404).json({message: 'The post with the specified ID does not exist'});
             } else {
                 res.status(200).json({
-                    id: id,
-                    ...body
+                    id: parseInt(id),
+                    title: toDelete.title,
+                    contents: toDelete.contents
                 });
             }
         })
@@ -93,16 +109,19 @@ router.delete('/:id', (req, res) => {
 
 router.get('/:id/comments', (req, res) => {
     const { id } = req.params;
-    post.findCommentById(id)
+    post.findPostComments(id)
         .then(comment => {
-            if(comment == null) {
+            if(comment == null || comment.length === 0) {
                 res.status(404).json({message: 'The post with the specified ID does not exist'});
+                return;
             } else {
                 res.json(comment);
+                return;
             }
         })
         .catch(() => {
             res.status(500).json({message: 'The comments information could not be retrieved'});
+            return;
         })
 });
 
